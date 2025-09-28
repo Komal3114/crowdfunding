@@ -5,6 +5,7 @@ contract CrowdFund {
     address public owner;
     uint public goal;
     uint public totalFunds;
+    mapping(address => uint) public contributions;
 
     constructor(uint _goal) {
         owner = msg.sender;
@@ -14,6 +15,7 @@ contract CrowdFund {
     // Function 1: Contribute to campaign
     function contribute() public payable {
         require(msg.value > 0, "Contribution must be greater than zero");
+        contributions[msg.sender] += msg.value;
         totalFunds += msg.value;
     }
 
@@ -28,5 +30,19 @@ contract CrowdFund {
     function isGoalReached() public view returns (bool) {
         return totalFunds >= goal;
     }
-}
 
+    // Function 4: Check contract balance
+    function getBalance() public view returns (uint) {
+        return address(this).balance;
+    }
+
+    // Function 5: Refund contributors if goal not reached
+    function refund() public {
+        require(totalFunds < goal, "Goal was reached, no refunds");
+        uint amount = contributions[msg.sender];
+        require(amount > 0, "No contributions to refund");
+
+        contributions[msg.sender] = 0;
+        payable(msg.sender).transfer(amount);
+    }
+}
